@@ -20,3 +20,19 @@ cd gpu_monitor
 cd gpu_monitor
 ./gpu_monitor_nohup.sh
 ```
+
+### 手动启动GPU占用程序
+```bash
+cd gpu_monitor
+python gpu_burner.py
+```
+指定GPU
+```bash
+cd gpu_monitor
+python gpu_burner.py <device_id>
+```
+存储进程号
+```bash
+cd gpu_monitor
+python gpu_burner.py <device_id> <pid_file_path>
+```

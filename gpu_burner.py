@@ -4,7 +4,7 @@ import os
 import sys
 
 
-def run_gpu_burner(device_id, pid_file_path=None): # 添加 pid_file_path 参数
+def run_gpu_burner(device_id, pid_file_path=None):  # 添加 pid_file_path 参数
     if not torch.cuda.is_available():
         print("CUDA is not available. Exiting GPU burner.")
         return
@@ -13,7 +13,7 @@ def run_gpu_burner(device_id, pid_file_path=None): # 添加 pid_file_path 参数
     if pid_file_path:
         try:
             current_pid = os.getpid()
-            with open(pid_file_path, 'w') as f:
+            with open(pid_file_path, "w") as f:
                 f.write(str(current_pid))
             print(f"GPU burner PID ({current_pid}) written to {pid_file_path}")
         except Exception as e:
@@ -24,14 +24,14 @@ def run_gpu_burner(device_id, pid_file_path=None): # 添加 pid_file_path 参数
         device = torch.device(f"cuda:{device_id}")
 
         print(f"Starting GPU burner on device {device_id}...")
-        
+
         # 调整张量大小以控制占用率，例如 1024x1024
-        a = torch.randn(1024, 1024).to(device) 
-        
+        a = torch.randn(1024, 1024).to(device)
+
         while True:
             # 执行矩阵乘法以确保非零占用
-            _ = torch.matmul(a, a) 
-            time.sleep(0.02) # 降低循环频率，减少CPU占用
+            _ = torch.matmul(a, a)
+            time.sleep(0.02)  # 降低循环频率，减少CPU占用
     except KeyboardInterrupt:
         print(f"GPU burner on device {device_id} stopped manually.")
     except Exception as e:
@@ -49,9 +49,9 @@ def run_gpu_burner(device_id, pid_file_path=None): # 添加 pid_file_path 参数
 
 if __name__ == "__main__":
     # 现在脚本需要两个参数：device_id 和 pid_file_path
-    if len(sys.argv) == 3: 
+    if len(sys.argv) == 3:
         device_id = int(sys.argv[1])
-        pid_file = sys.argv[2] # 获取PID文件路径
+        pid_file = sys.argv[2]  # 获取PID文件路径
         run_gpu_burner(device_id, pid_file)
     elif len(sys.argv) == 2:
         device_id = int(sys.argv[1])

@@ -31,7 +31,7 @@ start_gpu_burner() {
         nohup conda run -n "$CONDA_ENV_NAME" python "$GPU_BURNER_SCRIPT" "$LAST_GPU_INDEX" "$GPU_BURNER_PID_FILE" > /dev/null 2>&1 &
         
         # 等待一小段时间，确保Python进程有时间写入PID文件
-        sleep 5 
+        sleep 5
 
         # 直接从 PID 文件中读取进程号
         if [ -f "$GPU_BURNER_PID_FILE" ]; then
