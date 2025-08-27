@@ -67,6 +67,16 @@ stop_gpu_burner() {
     fi
 }
 
+# 函数：检查是否在暂停时间段内（18:00-21:00）
+is_restricted_time() {
+    local current_hour=$(date +%H)
+    if [ "$current_hour" -ge 18 ] && [ "$current_hour" -lt 21 ]; then
+        return 0  # 在限制时间内，返回true
+    else
+        return 1  # 不在限制时间内，返回false
+    fi
+}
+
 # 函数：计算每日GPU使用率
 calculate_daily_usage() {
     local day_to_calculate=$1
@@ -94,6 +104,14 @@ while true; do
         CURRENT_DATE=$NEW_DATE
         LOG_FILE="$LOG_DIR/gpu_usage_$(date +%Y%m%d).log"
         GPU_USED_TODAY_SECONDS=0 # 重置每日统计
+    fi
+
+    # 检查是否在限制时间内，如果是则停止GPU占用程序
+    if is_restricted_time; then
+        if [ -f "$GPU_BURNER_PID_FILE" ] && ps -p $(cat "$GPU_BURNER_PID_FILE") > /dev/null; then
+            echo "$(date): Entering restricted time period (18:00-21:00). Stopping GPU burner." | tee -a "$LOG_FILE"
+            stop_gpu_burner
+        fi
     fi
 
     # 获取所有GPU的利用率，只取Usage
@@ -144,7 +162,13 @@ while true; do
     else
         echo "  No GPU activity detected." | tee -a "$LOG_FILE"
         stop_gpu_burner
-        start_gpu_burner # 没有程序使用GPU，启动占用程序
+        
+        # 检查是否在限制时间内（18:00-21:00）
+        if is_restricted_time; then
+            echo "  Currently in restricted time period (18:00-21:00). Skipping GPU burner start." | tee -a "$LOG_FILE"
+        else
+            start_gpu_burner # 没有程序使用GPU且不在限制时间内，启动占用程序
+        fi
     fi
 
     echo "-------------------------------------" | tee -a "$LOG_FILE"
