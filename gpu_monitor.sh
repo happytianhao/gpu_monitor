@@ -12,6 +12,10 @@ LAST_GPU_INDEX=$(( $(nvidia-smi --query-gpu=count --format=csv,noheader,nounits 
 # >>>>>> 指定你的 Conda 环境名称 <<<<<<
 CONDA_ENV_NAME="torch" # 请将此替换为你的 Conda 环境名称
 
+# >>>>>> 禁用时间段配置 <<<<<<
+RESTRICTED_START_HOUR=18  # 禁用开始时间（24小时制）
+RESTRICTED_END_HOUR=21    # 禁用结束时间（24小时制）
+
 # 确保日志目录存在
 mkdir -p "$LOG_DIR"
 
@@ -67,10 +71,10 @@ stop_gpu_burner() {
     fi
 }
 
-# 函数：检查是否在暂停时间段内（18:00-21:00）
+# 函数：检查是否在暂停时间段内
 is_restricted_time() {
     local current_hour=$(date +%H)
-    if [ "$current_hour" -ge 18 ] && [ "$current_hour" -lt 21 ]; then
+    if [ "$current_hour" -ge "$RESTRICTED_START_HOUR" ] && [ "$current_hour" -lt "$RESTRICTED_END_HOUR" ]; then
         return 0  # 在限制时间内，返回true
     else
         return 1  # 不在限制时间内，返回false
@@ -109,7 +113,7 @@ while true; do
     # 检查是否在限制时间内，如果是则停止GPU占用程序
     if is_restricted_time; then
         if [ -f "$GPU_BURNER_PID_FILE" ] && ps -p $(cat "$GPU_BURNER_PID_FILE") > /dev/null; then
-            echo "$(date): Entering restricted time period (18:00-21:00). Stopping GPU burner." | tee -a "$LOG_FILE"
+            echo "$(date): Entering restricted time period (${RESTRICTED_START_HOUR}:00-${RESTRICTED_END_HOUR}:00). Stopping GPU burner." | tee -a "$LOG_FILE"
             stop_gpu_burner
         fi
     fi
@@ -163,9 +167,9 @@ while true; do
         echo "  No GPU activity detected." | tee -a "$LOG_FILE"
         stop_gpu_burner
         
-        # 检查是否在限制时间内（18:00-21:00）
+        # 检查是否在限制时间内
         if is_restricted_time; then
-            echo "  Currently in restricted time period (18:00-21:00). Skipping GPU burner start." | tee -a "$LOG_FILE"
+            echo "  Currently in restricted time period (${RESTRICTED_START_HOUR}:00-${RESTRICTED_END_HOUR}:00). Skipping GPU burner start." | tee -a "$LOG_FILE"
         else
             start_gpu_burner # 没有程序使用GPU且不在限制时间内，启动占用程序
         fi
