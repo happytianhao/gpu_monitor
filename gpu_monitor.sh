@@ -29,6 +29,32 @@ GPU_USED_TODAY_SECONDS=0
 start_gpu_burner() {
     if [ ! -f "$GPU_BURNER_PID_FILE" ]; then
         echo "$(date): Starting GPU burner on GPU $LAST_GPU_INDEX using Conda env: $CONDA_ENV_NAME..." | tee -a "$LOG_FILE"
+
+        # 检查conda环境是否存在
+        if ! conda env list | grep -q "^$CONDA_ENV_NAME "; then
+            echo "$(date): ERROR: Conda environment '$CONDA_ENV_NAME' not found. Please check your conda environment configuration." | tee -a "$LOG_FILE"
+            echo "$(date): Available environments:" | tee -a "$LOG_FILE"
+            conda env list | tee -a "$LOG_FILE"
+            return 1
+        fi
+        
+        # 测试conda环境是否能正常运行Python
+        if ! conda run -n "$CONDA_ENV_NAME" python --version > /dev/null 2>&1; then
+            echo "$(date): ERROR: Cannot run Python in conda environment '$CONDA_ENV_NAME'. Environment may be corrupted." | tee -a "$LOG_FILE"
+            return 1
+        fi
+        
+        # 测试conda环境是否能导入torch
+        if ! conda run -n "$CONDA_ENV_NAME" python -c "import torch; print('PyTorch version:', torch.__version__)" > /dev/null 2>&1; then
+            echo "$(date): ERROR: Cannot import torch in conda environment '$CONDA_ENV_NAME'. PyTorch may not be installed." | tee -a "$LOG_FILE"
+            echo "$(date): Please install PyTorch in the '$CONDA_ENV_NAME' environment." | tee -a "$LOG_FILE"
+            return 1
+        fi
+        
+        # 测试CUDA是否可用
+        if ! conda run -n "$CONDA_ENV_NAME" python -c "import torch; print('CUDA available:', torch.cuda.is_available())" > /dev/null 2>&1; then
+            echo "$(date): WARNING: CUDA may not be available in conda environment '$CONDA_ENV_NAME'." | tee -a "$LOG_FILE"
+        fi
         
         # 将 PID 文件路径作为第二个参数传递给 Python 脚本
         # nohup 让程序在后台运行，> /dev/null 2>&1 隐藏输出
