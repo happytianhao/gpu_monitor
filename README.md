@@ -53,7 +53,7 @@ cd gpu_monitor
 ### 方法一：使用专用停止脚本（推荐）
 ```bash
 cd gpu_monitor
-./stop_gpu_monitor.sh
+./stop_system.sh
 ```
 这个脚本会自动：
 - 查找并停止GPU监控脚本进程
